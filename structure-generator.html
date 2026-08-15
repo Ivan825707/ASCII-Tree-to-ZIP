@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор структури з дерева</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        /* ----- CSS змінні для світлої/темної теми ----- */
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-container: #ffffff;
+            --bg-input: #fafcff;
+            --bg-status-info: #dbeafe;
+            --bg-status-success: #dcfce7;
+            --bg-status-error: #fee2e2;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #cbd5e1;
+            --shadow: 0 12px 40px rgba(0,0,0,0.1);
+            --btn-primary: #3b82f6;
+            --btn-primary-hover: #2563eb;
+            --btn-secondary: #e2e8f0;
+            --btn-secondary-hover: #cbd5e1;
+            --badge-bg: #eef2ff;
+            --badge-color: #4338ca;
+            --input-focus: rgba(59,130,246,0.15);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-container: #1e293b;
+            --bg-input: #0f172a;
+            --bg-status-info: #1e3a5f;
+            --bg-status-success: #14532d;
+            --bg-status-error: #7f1d1d;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --shadow: 0 12px 40px rgba(0,0,0,0.6);
+            --btn-primary: #2563eb;
+            --btn-primary-hover: #3b82f6;
+            --btn-secondary: #334155;
+            --btn-secondary-hover: #475569;
+            --badge-bg: #1e293b;
+            --badge-color: #93c5fd;
+            --input-focus: rgba(59,130,246,0.3);
+        }
+
+        /* ----- Глобальні стилі ----- */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-body);
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.2s, color 0.2s;
+        }
+        .container {
+            background: var(--bg-container);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 30px 35px;
+            max-width: 820px;
+            width: 100%;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+        .header-left h1 {
+            font-size: 26px;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .header-left .sub {
+            color: var(--text-secondary);
+            margin: 4px 0 0;
+        }
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls select, .controls button {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .controls select:hover, .controls button:hover {
+            background: var(--btn-secondary-hover);
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .theme-toggle:hover {
+            background: var(--btn-secondary-hover);
+        }
+        label {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+            margin: 16px 0 6px;
+        }
+        textarea {
+            width: 100%;
+            height: 340px;
+            padding: 12px 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            resize: vertical;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: border 0.2s, background 0.2s, color 0.2s;
+        }
+        textarea:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px var(--input-focus);
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 18px 0 10px;
+        }
+        .row button {
+            background: var(--btn-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            flex: 1 1 auto;
+        }
+        .row button:hover { background: var(--btn-primary-hover); }
+        .row button:active { transform: scale(0.97); }
+        .row button.secondary {
+            background: var(--btn-secondary);
+            color: var(--text-primary);
+        }
+        .row button.secondary:hover { background: var(--btn-secondary-hover); }
+        .status {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: none;
+            white-space: pre-wrap;
+            word-break: break-word;
+            transition: background 0.2s, color 0.2s;
+        }
+        .status.success {
+            background: var(--bg-status-success);
+            color: var(--text-primary);
+            display: block;
+        }
+        .status.error {
+            background: var(--bg-status-error);
+            color: var(--text-primary);
+            display: block;
+        }
+        .status.info {
+            background: var(--bg-status-info);
+            color: var(--text-primary);
+            display: block;
+        }
+        .footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .badge {
+            background: var(--badge-bg);
+            color: var(--badge-color);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        code {
+            background: var(--bg-input);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Шапка з керуванням темою та мовою -->
+    <div class="header">
+        <div class="header-left">
+            <h1 id="title">🌳 ASCII‑дерево → ZIP</h1>
+            <div class="sub" id="subtitle">Вставте дерево з <span class="badge">├──</span> <span class="badge">└──</span> <span class="badge">│</span> – отримаєте архів</div>
+        </div>
+        <div class="controls">
+            <select id="langSelect" aria-label="Мова">
+                <option value="uk">🇺🇦 Українська</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="fr">🇫🇷 Français</option>
+            </select>
+            <button class="theme-toggle" id="themeToggle" title="Перемкнути тему">🌙</button>
+        </div>
+    </div>
+
+    <label id="treeLabel">Ваше дерево (скопіюйте з чату або файлу)</label>
+    <textarea id="treeInput" placeholder='Наприклад:
+telegram-tiktok-scheduler/
+├── .env.example
+├── .gitignore
+├── package.json
+├── src/
+│   ├── index.ts
+│   └── config/
+│       └── index.ts
+└── README.md'></textarea>
+
+    <div class="row">
+        <button id="parseBtn">📦 <span id="btnGenerate">Згенерувати ZIP</span></button>
+        <button id="exampleBtn" class="secondary">📋 <span id="btnExample">Вставити приклад</span></button>
+        <button id="clearBtn" class="secondary">🗑 <span id="btnClear">Очистити</span></button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div class="footer" id="footerText">Парсить вкладеність за відступами та символами │. Папки визначаються за закінченням <code>/</code>.</div>
+</div>
+
+<script>
+    (function() {
+        // ---- DOM елементи ----
+        const treeInput = document.getElementById('treeInput');
+        const parseBtn = document.getElementById('parseBtn');
+        const exampleBtn = document.getElementById('exampleBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusDiv = document.getElementById('status');
+        const themeToggle = document.getElementById('themeToggle');
+        const langSelect = document.getElementById('langSelect');
+
+        // ---- Текстові ключі для інтерфейсу (5 мов) ----
+        const translations = {
+            uk: {
+                title: '🌳 ASCII‑дерево → ZIP',
+                subtitle: 'Вставте дерево з <span class="badge">├──</span> <span class="badge">└──</span> <span class="badge">│</span> – отримаєте архів',
+                treeLabel: 'Ваше дерево (скопіюйте з чату або файлу)',
+                btnGenerate: 'Згенерувати ZIP',
+                btnExample: 'Вставити приклад',
+                btnClear: 'Очистити',
+                footer: 'Парсить вкладеність за відступами та символами │. Папки визначаються за закінченням <code>/</code>.',
+                statusExample: '✅ Приклад вставлено. Натисніть "Згенерувати ZIP".',
+                statusEmpty: '❌ Введіть дерево або натисніть "Вставити приклад".',
+                statusNoElements: '❌ Не вдалося розпізнати жодного елемента. Перевірте, чи є символи ├── або └──.',
+                statusZipOk: (count, root) => `✅ ZIP створено! Додано ${count} елементів (папки позначені /.keep). Корінь: ${root}`,
+                statusZipError: (msg) => `❌ Помилка при створенні ZIP: ${msg}`,
+                statusParseError: (msg) => `❌ Помилка парсингу: ${msg}`
+            },
+            en: {
+                title: '🌳 ASCII‑tree → ZIP',
+                subtitle: 'Paste a tree with <span class="badge">├──</span> <span class="badge">└──</span> <span class="badge">│</span> – get a ZIP archive',
+                treeLabel: 'Your tree (copy from chat or file)',
+                btnGenerate: 'Generate ZIP',
+                btnExample: 'Insert example',
+                btnClear: 'Clear',
+                footer: 'Parses nesting by indentation and │ symbols. Folders end with <code>/</code>.',
+                statusExample: '✅ Example inserted. Click "Generate ZIP".',
+                statusEmpty: '❌ Please enter a tree or click "Insert example".',
+                statusNoElements: '❌ No elements recognized. Make sure you have ├── or └── symbols.',
+                statusZipOk: (count, root) => `✅ ZIP created! Added ${count} items (folders marked with /.keep). Root: ${root}`,
+                statusZipError: (msg) => `❌ ZIP error: ${msg}`,
+                statusParseError: (msg) => `❌ Parse error: ${msg}`
+            },
+            de: {
+                title: '🌳 ASCII‑Baum → ZIP',
+                subtitle: 'Füge einen Baum mit <span class="badge">├──</span> <span class="badge">└──</span> <span class="badge">│</span> ein – erhalte ein ZIP-Archiv',
+                treeLabel: 'Ihr Baum (aus Chat oder Datei kopieren)',
+                btnGenerate: 'ZIP erstellen',
+                btnExample: 'Beispiel einfügen',
+                btnClear: 'Löschen',
+                footer: 'Parst Einrückungen und │-Symbole. Ordner enden mit <code>/</code>.',
+                statusExample: '✅ Beispiel eingefügt. Klicken Sie "ZIP erstellen".',
+                statusEmpty: '❌ Bitte geben Sie einen Baum ein oder klicken Sie "Beispiel einfügen".',
+                statusNoElements: '❌ Keine Elemente erkannt. Stellen Sie sicher, dass ├── oder └── vorhanden sind.',
+                statusZipOk: (count, root) => `✅ ZIP erstellt! ${count} Elemente hinzugefügt (Ordner mit /.keep markiert). Root: ${root}`,
+                statusZipError: (msg) => `❌ ZIP-Fehler: ${msg}`,
+                statusParseError: (msg) => `❌ Parse-Fehler: ${msg}`
+            },
+            es: {
+                title: '🌳 Árbol ASCII → ZIP',
+                subtitle: 'Pega un árbol con <span class="badge">├──</span> <span class="badge">└──</span> <span class="badge">│</span> – obtén un archivo ZIP',
+                treeLabel: 'Tu árbol (copia del chat o archivo)',
+                btnGenerate: 'Generar ZIP',
+                btnExample: 'Insertar ejemplo',
+                btnClear: 'Limpiar',
+                footer: 'Analiza la indentación y los símbolos │. Las carpetas terminan con <code>/</code>.',
+                statusExample: '✅ Ejemplo insertado. Haz clic en "Generar ZIP".',
+                statusEmpty: '❌ Ingresa un árbol o haz clic en "Insertar ejemplo".',
+                statusNoElements: '❌ No se reconoció ningún elemento. Asegúrate de tener ├── o └──.',
+                statusZipOk: (count, root) => `✅ ZIP creado. Añadidos ${count} elementos (carpetas marcadas con /.keep). Raíz: ${root}`,
+                statusZipError: (msg) => `❌ Error al crear ZIP: ${msg}`,
+                statusParseError: (msg) => `❌ Error de análisis: ${msg}`
+            },
+            fr: {
+                title: '🌳 Arborescence ASCII → ZIP',
+                subtitle: 'Collez une arborescence avec <span class="badge">├──</span> <span class="badge">└──</span> <span class="badge">│</span> – obtenez une archive ZIP',
+                treeLabel: 'Votre arborescence (copiez depuis le chat ou un fichier)',
+                btnGenerate: 'Générer ZIP',
+                btnExample: 'Insérer un exemple',
+                btnClear: 'Effacer',
+                footer: 'Analyse l\'indentation et les symboles │. Les dossiers se terminent par <code>/</code>.',
+                statusExample: '✅ Exemple inséré. Cliquez sur "Générer ZIP".',
+                statusEmpty: '❌ Veuillez entrer une arborescence ou cliquer sur "Insérer un exemple".',
+                statusNoElements: '❌ Aucun élément reconnu. Vérifiez que les symboles ├── ou └── sont présents.',
+                statusZipOk: (count, root) => `✅ ZIP créé. ${count} éléments ajoutés (dossiers marqués avec /.keep). Racine : ${root}`,
+                statusZipError: (msg) => `❌ Erreur ZIP : ${msg}`,
+                statusParseError: (msg) => `❌ Erreur d\'analyse : ${msg}`
+            }
+        };
+
+        // ---- Поточні налаштування ----
+        let currentLang = localStorage.getItem('lang') || 'uk';
+        let currentTheme = localStorage.getItem('theme') || 'light';
+
+        // ---- Функція оновлення тексту інтерфейсу ----
+        function updateUI(lang) {
+            const t = translations[lang] || translations.uk;
+            document.getElementById('title').innerHTML = t.title;
+            document.getElementById('subtitle').innerHTML = t.subtitle;
+            document.getElementById('treeLabel').textContent = t.treeLabel;
+            document.querySelector('#btnGenerate').textContent = t.btnGenerate;
+            document.querySelector('#btnExample').textContent = t.btnExample;
+            document.querySelector('#btnClear').textContent = t.btnClear;
+            document.getElementById('footerText').innerHTML = t.footer;
+            // Зберігаємо поточну мову
+            localStorage.setItem('lang', lang);
+        }
+
+        // ---- Функція оновлення теми ----
+        function updateTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', theme);
+            currentTheme = theme;
+        }
+
+        // ---- Тогл теми ----
+        themeToggle.addEventListener('click', () => {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            updateTheme(newTheme);
+        });
+
+        // ---- Зміна мови ----
+        langSelect.addEventListener('change', (e) => {
+            const lang = e.target.value;
+            currentLang = lang;
+            updateUI(lang);
+        });
+
+        // ---- Приклад дерева (ваш вихідний запит) ----
+        const EXAMPLE_TREE = `telegram-tiktok-scheduler/
+├── .env.example
+├── .gitignore
+├── package.json
+├── tsconfig.json
+├── wrangler.toml
+├── migrations/
+│   ├── 0000_initial.sql
+│   └── 0001_add_indexes.sql
+├── src/
+│   ├── index.ts
+│   ├── config/
+│   │   └── index.ts
+│   ├── database/
+│   │   ├── client.ts
+│   │   ├── schema.ts
+│   │   └── queries.ts
+│   ├── bot/
+│   │   ├── index.ts
+│   │   ├── keyboards.ts
+│   │   ├── handlers/
+│   │   │   ├── start.ts
+│   │   │   ├── upload.ts
+│   │   │   ├── schedule.ts
+│   │   │   ├── list.ts
+│   │   │   ├── stats.ts
+│   │   │   └── tiktok.ts
+│   │   └── middleware/
+│   │       └── auth.ts
+│   ├── tiktok/
+│   │   ├── oauth.ts
+│   │   ├── client.ts
+│   │   └── types.ts
+│   ├── scheduler/
+│   │   └── scheduler.ts
+│   ├── storage/
+│   │   └── r2.ts
+│   ├── services/
+│   │   ├── video.service.ts
+│   │   ├── caption.service.ts
+│   │   ├── schedule.service.ts
+│   │   └── publication.service.ts
+│   └── utils/
+│       ├── timezone.ts
+│       └── logger.ts
+├── tests/
+│   ├── unit/
+│   │   ├── caption.test.ts
+│   │   └── schedule.test.ts
+│   └── integration/
+│       └── ...
+└── README.md`;
+
+        // ---- Парсер ASCII-дерева (без помилки redeclaration) ----
+        function parseTree(text) {
+            const lines = text.split('\n');
+            const result = { paths: [], root: null };
+
+            while (lines.length && lines[0].trim() === '') lines.shift();
+            while (lines.length && lines[lines.length-1].trim() === '') lines.pop();
+
+            if (lines.length === 0) return result;
+
+            let rootLine = lines[0].trim();
+            if (rootLine.includes('├──') || rootLine.includes('└──') || rootLine.includes('│')) {
+                result.root = 'project';
+            } else {
+                result.root = rootLine.replace(/\/+$/, '');
+                lines.shift();
+            }
+
+            const entries = [];
+            for (let raw of lines) {
+                const trimmed = raw;
+                let markerIndex = trimmed.indexOf('├──');
+                if (markerIndex === -1) markerIndex = trimmed.indexOf('└──');
+                if (markerIndex === -1) {
+                    const pipeIndex = trimmed.indexOf('│');
+                    if (pipeIndex !== -1) {
+                        const afterPipe = trimmed.slice(pipeIndex + 1);
+                        const subMarker = afterPipe.indexOf('├──');
+                        if (subMarker === -1) {
+                            const subMarker2 = afterPipe.indexOf('└──');
+                            if (subMarker2 !== -1) {
+                                markerIndex = pipeIndex + 1 + subMarker2;
+                            }
+                        } else {
+                            markerIndex = pipeIndex + 1 + subMarker;
+                        }
+                    }
+                }
+                if (markerIndex === -1) continue;
+
+                const prefix = trimmed.slice(0, markerIndex);
+                const pipeCount = (prefix.match(/│/g) || []).length;
+                const spaceCount = prefix.length - pipeCount;
+                const level = pipeCount + Math.floor(spaceCount / 4);
+
+                const namePart = trimmed.slice(markerIndex + 4);
+                let name = namePart.trim();
+                if (!name) continue;
+
+                entries.push({ level, name, raw: trimmed });
+            }
+
+            const stack = [];
+            const fullPaths = [];
+            for (let entry of entries) {
+                const { level, name } = entry;
+                while (stack.length > level) {
+                    stack.pop();
+                }
+                let fullPath = result.root;
+                for (let part of stack) {
+                    fullPath += '/' + part;
+                }
+                const isFolder = name.endsWith('/') || name.endsWith('\\');
+                const cleanName = name.replace(/[\/\\]+$/, '');
+                if (fullPath) {
+                    fullPath += '/' + cleanName;
+                } else {
+                    fullPath = cleanName;
+                }
+                if (isFolder) {
+                    fullPath += '/';
+                }
+                fullPaths.push(fullPath);
+
+                if (isFolder) {
+                    while (stack.length > level) {
+                        stack.pop();
+                    }
+                    stack.push(cleanName);
+                }
+            }
+
+            if (result.root) {
+                fullPaths.unshift(result.root + '/');
+            }
+
+            return { paths: fullPaths, root: result.root };
+        }
+
+        // ---- Генерація ZIP з масиву шляхів ----
+        function generateZipFromPaths(paths) {
+            const zip = new JSZip();
+            let count = 0;
+            for (let p of paths) {
+                if (p.endsWith('/')) {
+                    const folderPath = p.slice(0, -1);
+                    zip.file(folderPath + '/.keep', '');
+                    count++;
+                } else {
+                    zip.file(p, '');
+                    count++;
+                }
+            }
+            return { zip, count };
+        }
+
+        // ---- Показати статус (з перекладом) ----
+        function showStatus(msg, type = 'info') {
+            statusDiv.textContent = msg;
+            statusDiv.className = 'status ' + type;
+        }
+
+        // ---- Основна дія ----
+        function handleParse() {
+            const raw = treeInput.value;
+            const t = translations[currentLang] || translations.uk;
+
+            if (!raw.trim()) {
+                showStatus(t.statusEmpty, 'error');
+                return;
+            }
+
+            try {
+                const parsed = parseTree(raw);
+                if (parsed.paths.length === 0) {
+                    showStatus(t.statusNoElements, 'error');
+                    return;
+                }
+
+                const { zip, count } = generateZipFromPaths(parsed.paths);
+                zip.generateAsync({ type: 'blob' }).then(blob => {
+                    saveAs(blob, `${parsed.root || 'project'}-structure.zip`);
+                    showStatus(t.statusZipOk(count, parsed.root), 'success');
+                }).catch(err => {
+                    showStatus(t.statusZipError(err.message), 'error');
+                });
+            } catch (e) {
+                showStatus(t.statusParseError(e.message), 'error');
+            }
+        }
+
+        // ---- Події кнопок ----
+        parseBtn.addEventListener('click', handleParse);
+
+        exampleBtn.addEventListener('click', () => {
+            treeInput.value = EXAMPLE_TREE;
+            const t = translations[currentLang] || translations.uk;
+            showStatus(t.statusExample, 'info');
+        });
+
+        clearBtn.addEventListener('click', () => {
+            treeInput.value = '';
+            statusDiv.className = 'status';
+            statusDiv.style.display = 'none';
+        });
+
+        // ---- Ініціалізація ----
+        // Відновлюємо тему
+        updateTheme(currentTheme);
+        // Відновлюємо мову
+        langSelect.value = currentLang;
+        updateUI(currentLang);
+
+        // Початково статус прихований
+        statusDiv.style.display = 'none';
+    })();
+</script>
+</body>
+</html>
