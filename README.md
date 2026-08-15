@@ -1,3 +1,44 @@
+# ASCII Tree to ZIP Generator
+
+Convert any ASCII directory tree (with `├──`, `└──`, and `│` symbols) into a downloadable ZIP archive containing the exact folder and file structure.
+
+![Screenshot](screenshot.png) *(You can add a screenshot later)*
+
+**Live demo:** [https://ivan825707.github.io/ASCII-Tree-to-ZIP/](https://ivan825707.github.io/ASCII-Tree-to-ZIP/)
+
+## Features
+
+- 🧩 **Parse ASCII trees** – copy a tree from a chat, documentation, or file listing.
+- 📦 **Generate ZIP** – get a ready‑to‑use archive with all folders and empty files.
+- 🌗 **Dark / Light theme** – switch themes; your preference is saved in the browser.
+- 🌍 **5 languages** – Ukrainian, English, German, Spanish, and French (UI fully translated).
+- 💾 **Local storage** – remembers your language and theme choices.
+- 🚀 **No server needed** – works completely in your browser.
+
+## How to Use
+
+1. Open the `index.html` file in any modern browser, or visit the [live demo](https://ivan825707.github.io/ASCII-Tree-to-ZIP/).
+2. Paste your ASCII tree into the text area.  
+   (You can also click **“Insert example”** to load a sample tree.)
+3. Optionally switch the theme (☀️/🌙) or change the language from the dropdown.
+4. Click **“Generate ZIP”**.
+5. A ZIP archive named `your-project-structure.zip` will be downloaded automatically.
+
+## Example Tree
+demo/
+├── backend/
+│ ├── server.py
+│ ├── routes/
+│ │ ├── api.py
+│ │ └── auth.py
+│ └── models/
+│ └── user.py
+├── frontend/
+│ ├── app.js
+│ └── assets/
+│ ├── logo.png
+│ └── style.css
+└── docker-compose.yml
 
 When you generate the ZIP, the archive will contain:
 
