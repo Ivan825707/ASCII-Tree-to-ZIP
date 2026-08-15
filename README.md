@@ -25,58 +25,20 @@ Convert any ASCII directory tree (with `├──`, `└──`, and `│` symbo
 ## Example Tree
 
 ```
-telegram-tiktok-scheduler/
-├── .env.example
-├── .gitignore
-├── package.json
-├── tsconfig.json
-├── wrangler.toml
-├── migrations/
-│   ├── 0000_initial.sql
-│   └── 0001_add_indexes.sql
-├── src/
-│   ├── index.ts
-│   ├── config/
-│   │   └── index.ts
-│   ├── database/
-│   │   ├── client.ts
-│   │   ├── schema.ts
-│   │   └── queries.ts
-│   ├── bot/
-│   │   ├── index.ts
-│   │   ├── keyboards.ts
-│   │   ├── handlers/
-│   │   │   ├── start.ts
-│   │   │   ├── upload.ts
-│   │   │   ├── schedule.ts
-│   │   │   ├── list.ts
-│   │   │   ├── stats.ts
-│   │   │   └── tiktok.ts
-│   │   └── middleware/
-│   │       └── auth.ts
-│   ├── tiktok/
-│   │   ├── oauth.ts
-│   │   ├── client.ts
-│   │   └── types.ts
-│   ├── scheduler/
-│   │   └── scheduler.ts
-│   ├── storage/
-│   │   └── r2.ts
-│   ├── services/
-│   │   ├── video.service.ts
-│   │   ├── caption.service.ts
-│   │   ├── schedule.service.ts
-│   │   └── publication.service.ts
-│   └── utils/
-│       ├── timezone.ts
-│       └── logger.ts
-├── tests/
-│   ├── unit/
-│   │   ├── caption.test.ts
-│   │   └── schedule.test.ts
-│   └── integration/
-│       └── ...
-└── README.md
+demo/
+├── backend/
+│   ├── server.py
+│   ├── routes/
+│   │   ├── api.py
+│   │   └── auth.py
+│   └── models/
+│       └── user.py
+├── frontend/
+│   ├── app.js
+│   └── assets/
+│       ├── logo.png
+│       └── style.css
+└── docker-compose.yml
 ```
 
 When you generate the ZIP, the archive will contain:
