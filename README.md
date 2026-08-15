@@ -2,8 +2,6 @@
 
 Convert any ASCII directory tree (with `├──`, `└──`, and `│` symbols) into a downloadable ZIP archive containing the exact folder and file structure.
 
-![Screenshot](screenshot.png) *(You can add a screenshot later)*
-
 **Live demo:** [https://ivan825707.github.io/ASCII-Tree-to-ZIP/](https://ivan825707.github.io/ASCII-Tree-to-ZIP/)
 
 ## Features
@@ -17,7 +15,7 @@ Convert any ASCII directory tree (with `├──`, `└──`, and `│` symbo
 
 ## How to Use
 
-1. Open the `index.html` file in any modern browser, or visit the [live demo](https://ivan825707.github.io/ASCII-Tree-to-ZIP/).
+1. Open the `index.html` file in any modern browser.
 2. Paste your ASCII tree into the text area.  
    (You can also click **“Insert example”** to load a sample tree.)
 3. Optionally switch the theme (☀️/🌙) or change the language from the dropdown.
@@ -25,20 +23,23 @@ Convert any ASCII directory tree (with `├──`, `└──`, and `│` symbo
 5. A ZIP archive named `your-project-structure.zip` will be downloaded automatically.
 
 ## Example Tree
+
+```
 demo/
 ├── backend/
-│ ├── server.py
-│ ├── routes/
-│ │ ├── api.py
-│ │ └── auth.py
-│ └── models/
-│ └── user.py
+│   ├── server.py
+│   ├── routes/
+│   │   ├── api.py
+│   │   └── auth.py
+│   └── models/
+│       └── user.py
 ├── frontend/
-│ ├── app.js
-│ └── assets/
-│ ├── logo.png
-│ └── style.css
+│   ├── app.js
+│   └── assets/
+│       ├── logo.png
+│       └── style.css
 └── docker-compose.yml
+```
 
 When you generate the ZIP, the archive will contain:
 
